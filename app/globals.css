@@ -1,0 +1,147 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --page: #f6f8fb;
+  --surface: #ffffff;
+  --surface-subtle: #eef3f7;
+  --text: #142033;
+  --muted: #617086;
+  --border: #dfe6ed;
+  --border-strong: #b9c6d3;
+  --primary: #087ea4;
+  --primary-strong: #086581;
+  --primary-soft: #e4f5fa;
+  --ink: var(--text);
+  --paper: var(--page);
+  --line: var(--border);
+  --indigo: var(--primary);
+  --indigo-dark: var(--primary-strong);
+  --coral: #ff8468;
+}
+
+.dark {
+  --page: #09111d;
+  --surface: #101b2a;
+  --surface-subtle: #172537;
+  --text: #edf4fb;
+  --muted: #9eafc2;
+  --border: #27374a;
+  --border-strong: #42556b;
+  --primary: #34b3d6;
+  --primary-strong: #1995b8;
+  --primary-soft: #123746;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text);
+  font-family:
+    "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", system-ui, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: #dfe3ff;
+  color: #2d378f;
+}
+
+.brand-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.drop-sheen {
+  background-image: radial-gradient(circle at 50% 0%, #f0f2ff 0, transparent 56%);
+}
+
+.soft-shadow {
+  box-shadow: 0 10px 30px rgba(29, 36, 65, 0.07);
+}
+
+.dark .bg-white {
+  background-color: var(--surface) !important;
+}
+
+.dark .bg-slate-50,
+.dark .bg-slate-50\/70,
+.dark .bg-slate-50\/80,
+.dark .bg-slate-100 {
+  background-color: var(--surface-subtle) !important;
+}
+
+.dark .text-slate-950,
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-slate-700 {
+  color: var(--text) !important;
+}
+
+.dark .text-slate-600,
+.dark .text-slate-500,
+.dark .text-slate-400 {
+  color: var(--muted) !important;
+}
+
+.dark .border-slate-200,
+.dark .border-slate-300,
+.dark .border-slate-200\/80 {
+  border-color: var(--border) !important;
+}
+
+.dark .drop-sheen {
+  background-image: radial-gradient(circle at 50% 0%, #123746 0, transparent 56%);
+}
+
+.result-enter {
+  animation: result-enter 360ms ease-out both;
+}
+
+@keyframes result-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
