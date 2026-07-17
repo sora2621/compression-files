@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useWorkspace } from "@/components/app/workspace-provider";
+import { ImageLibraryPicker } from "@/components/files/image-library-picker";
 import { FileDropzone, type RejectedFile } from "@/components/workspace/file-dropzone";
 import { FileList } from "@/components/workspace/file-list";
 
@@ -37,6 +38,13 @@ export function HomePage() {
             setRejected([]);
           }}
           onRejected={setRejected}
+        />
+        <ImageLibraryPicker
+          className="mt-3"
+          onImages={(incoming) => {
+            addFiles(incoming);
+            setRejected([]);
+          }}
         />
 
         {rejected.length > 0 && (

@@ -29,6 +29,7 @@ export interface CompressionSummaryProps {
   downloadName?: string;
   onCompare?: () => void;
   onReprocess?: () => void;
+  hideDownloadOnMobile?: boolean;
   className?: string;
 }
 
@@ -45,6 +46,7 @@ export function CompressionSummary({
   downloadName,
   onCompare,
   onReprocess,
+  hideDownloadOnMobile = false,
   className,
 }: CompressionSummaryProps) {
   const titleId = useId();
@@ -156,7 +158,11 @@ export function CompressionSummary({
       {(downloadUrl || onCompare || onReprocess) && (
         <div className="flex flex-col gap-2 border-t border-slate-200 p-5 sm:flex-row sm:flex-wrap sm:items-center sm:p-7">
           {downloadUrl && (
-            <div className="flex min-w-0 flex-col gap-1.5 sm:mr-2">
+            <div
+              className={`min-w-0 flex-col gap-1.5 sm:mr-2 ${
+                hideDownloadOnMobile ? "hidden md:flex" : "flex"
+              }`}
+            >
               <a
                 href={downloadUrl}
                 download={downloadName}

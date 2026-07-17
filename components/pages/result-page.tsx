@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { useWorkspace } from "@/components/app/workspace-provider";
+import { MobileImageDownloadButton } from "@/components/files/mobile-image-download-button";
 import { OptimizationReportCard } from "@/components/optimization-report-card";
 import { CompressionSummary, ErrorCard } from "@/components/progress";
 import { TargetSizeResultCard } from "@/components/target-size/TargetSizeResultCard";
@@ -123,6 +124,7 @@ export function ResultPage({ jobId }: { jobId: string }) {
     );
 
   const kind = displayKind(result.kind);
+  const isImageResult = kind === "image";
   const beforeResolution =
     result.originalWidth && result.originalHeight
       ? `${result.originalWidth}×${result.originalHeight}`
@@ -139,7 +141,11 @@ export function ResultPage({ jobId }: { jobId: string }) {
 
   return (
     <main className="min-h-[calc(100vh-4rem)] bg-[var(--page)]">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+      <div
+        className={`mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12 ${
+          isImageResult ? "pb-52 md:pb-12" : ""
+        }`}
+      >
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="flex items-center gap-2 text-xs font-black text-emerald-700 dark:text-emerald-400">
@@ -165,6 +171,7 @@ export function ResultPage({ jobId }: { jobId: string }) {
           removedMetadata={result.metadataRemoved ? ["メタデータ"] : []}
           downloadUrl={result.downloadUrl}
           downloadName={result.outputName}
+          hideDownloadOnMobile={isImageResult}
           onCompare={() =>
             document.getElementById("comparison")?.scrollIntoView({ behavior: "smooth" })
           }
@@ -269,6 +276,14 @@ export function ResultPage({ jobId }: { jobId: string }) {
           </Link>
         </div>
       </div>
+      {isImageResult && (
+        <MobileImageDownloadButton
+          downloadUrl={result.downloadUrl}
+          originalFileName={result.fileName}
+          outputExtension={result.outputFormat}
+          outputMimeType={result.outputMime}
+        />
+      )}
     </main>
   );
 }
