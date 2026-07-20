@@ -25,6 +25,7 @@ export interface SharpImageEncodingRequest {
   outputFormat: ImageOutputFormat;
   encoding: ImageEncoding;
   quality: number;
+  maxDimension?: number | null;
   jpegBackgroundColor?: string;
   enhancements?: ImageEnhancementOptions;
   warnings: string[];
@@ -217,6 +218,14 @@ export async function encodeImageWithSharp(request: SharpImageEncodingRequest) {
     request.warnings.push(
       `透明部分はJPEGで保持できないため、背景色${background}に合成しました。`,
     );
+  }
+  if (request.maxDimension !== null && request.maxDimension !== undefined) {
+    pipeline = pipeline.resize({
+      width: request.maxDimension,
+      height: request.maxDimension,
+      fit: "inside",
+      withoutEnlargement: true,
+    });
   }
   await IMAGE_ENCODERS[request.outputFormat](pipeline, request);
   return { sourceMetadata, hasAlpha };

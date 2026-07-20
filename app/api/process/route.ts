@@ -216,6 +216,21 @@ export async function POST(request: Request) {
         "INVALID_QUALITY",
       );
     }
+    const requestedImageMaxDimension = formData.get("imageMaxDimension");
+    const imageMaxDimension =
+      requestedImageMaxDimension === null ? null : Number(requestedImageMaxDimension);
+    if (
+      imageMaxDimension !== null &&
+      (!Number.isInteger(imageMaxDimension) ||
+        imageMaxDimension < 320 ||
+        imageMaxDimension > 10_000)
+    ) {
+      throw new AppError(
+        "画像の長辺は320〜10000pxで指定してください。",
+        400,
+        "INVALID_IMAGE_RESOLUTION",
+      );
+    }
     const requestedBackgroundColor = formData.get("jpegBackgroundColor");
     const jpegBackgroundColor =
       requestedBackgroundColor === null
@@ -322,6 +337,7 @@ export async function POST(request: Request) {
               outputFormat === "avif"
                 ? outputFormat
                 : "webp",
+            maxDimension: imageMaxDimension,
             signal,
             onProgress: (progress, stage, details) => {
               updateProcessingJob(job!.jobId, {
@@ -572,6 +588,7 @@ export async function POST(request: Request) {
         outputFormat,
         encoding,
         quality,
+        maxDimension: imageMaxDimension,
         jpegBackgroundColor,
         processingMode,
         enhancements,

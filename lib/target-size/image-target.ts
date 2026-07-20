@@ -58,6 +58,7 @@ export interface OptimizeImageToTargetSizeInput {
   originalName?: string;
   options: TargetSizeOptions;
   outputFormat?: TargetImageFormat;
+  maxDimension?: number | null;
   signal?: AbortSignal;
   onProgress?: (
     progress: number,
@@ -139,11 +140,20 @@ async function encodeCandidate(options: {
   background: string | null;
   hasAlpha: boolean;
   speedPreset?: TargetSizeOptions["speedPreset"];
+  maxDimension?: number | null;
 }) {
   const speed = normalizeProcessingSpeedPreset(options.speedPreset);
   let pipeline = sharp(options.source, { failOn: "error", sequentialRead: true })
     .autoOrient()
     .keepIccProfile();
+  if (options.maxDimension !== null && options.maxDimension !== undefined) {
+    pipeline = pipeline.resize({
+      width: options.maxDimension,
+      height: options.maxDimension,
+      fit: "inside",
+      withoutEnlargement: true,
+    });
+  }
   if (options.format === "jpeg") {
     if (options.hasAlpha) {
       if (!options.background || !/^#[0-9a-f]{6}$/i.test(options.background)) {
@@ -330,6 +340,7 @@ export async function optimizeImageToTargetSize(
       background: input.options.jpegBackground,
       hasAlpha: sourceMetadata.hasAlpha === true,
       speedPreset: input.options.speedPreset,
+      maxDimension: input.maxDimension,
     });
     const decoded = await verifyDecodedImage(buffer);
     await writeFile(outputPath, buffer);

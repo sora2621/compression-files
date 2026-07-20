@@ -117,6 +117,7 @@ import { calculateOverallProgress } from "@/lib/progress/aggregate";
 import { DEFAULT_TARGET_SIZE_OPTIONS } from "@/lib/target-size/config";
 import { isOutputFormatForCategory } from "@/shared/media/output-formats";
 
+import type { CompressionInitialSettings } from "@/features/use-case-presets/types";
 import type { ProcessResult, QueueItem } from "@/features/workspace/types";
 import type { RuntimeCapabilities } from "@/lib/capabilities/runtime-capabilities";
 import type { ProcessingSpeedPreset } from "@/lib/processing/types";
@@ -131,6 +132,9 @@ export interface CompressionAppProps {
   embedded?: boolean;
   initialMode?: ProcessingMode;
   initialPreset?: "quality" | "balanced" | "small";
+  initialSettings?: CompressionInitialSettings;
+  autoStart?: boolean;
+  openDetails?: boolean;
 }
 
 export function CompressionApp({
@@ -138,25 +142,36 @@ export function CompressionApp({
   embedded = false,
   initialMode = "high-quality-optimization",
   initialPreset = "balanced",
+  initialSettings,
+  autoStart = false,
+  openDetails = false,
 }: CompressionAppProps = {}) {
   const router = useRouter();
   const { preferences, addHistory, showToast } = useWorkspace();
   const [items, setItems] = useState<QueueItem[]>([]);
   const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(() => new Set());
   const [outputFormat, setOutputFormat] = useState<ImageOutputFormat>(
-    DEFAULT_IMAGE_OUTPUT_SETTINGS.format,
+    initialSettings?.imageFormat ?? DEFAULT_IMAGE_OUTPUT_SETTINGS.format,
   );
   const [encoding, setEncoding] = useState<ImageEncoding>(
-    DEFAULT_IMAGE_OUTPUT_SETTINGS.encoding,
+    initialSettings?.imageEncoding ?? DEFAULT_IMAGE_OUTPUT_SETTINGS.encoding,
   );
   const [quality, setQuality] = useState(
-    initialPreset === "quality" ? 94 : initialPreset === "small" ? 68 : 82,
+    initialSettings?.imageQuality ??
+      (initialPreset === "quality" ? 94 : initialPreset === "small" ? 68 : 82),
+  );
+  const [imageMaxDimension, setImageMaxDimension] = useState<number | null>(
+    initialSettings?.imageMaxDimension ?? null,
   );
   const [jpegBackgroundColor, setJpegBackgroundColor] = useState(
     DEFAULT_IMAGE_OUTPUT_SETTINGS.jpegBackgroundColor ?? "#ffffff",
   );
-  const [processingMode, setProcessingMode] = useState<ProcessingMode>(initialMode);
-  const [speedPreset, setSpeedPreset] = useState<ProcessingSpeedPreset>("balanced");
+  const [processingMode, setProcessingMode] = useState<ProcessingMode>(
+    initialSettings?.processingMode ?? initialMode,
+  );
+  const [speedPreset, setSpeedPreset] = useState<ProcessingSpeedPreset>(
+    initialSettings?.speedPreset ?? "balanced",
+  );
   const [imageEnhancements, setImageEnhancements] = useState<ImageEnhancementOptions>(
     DEFAULT_IMAGE_ENHANCEMENTS,
   );
@@ -173,6 +188,7 @@ export function CompressionApp({
         : initialPreset === "small"
           ? "small"
           : "balanced",
+    ...initialSettings?.videoOptions,
   });
   const [audioOptions, setAudioOptions] = useState<AudioProcessingOptions>({
     ...DEFAULT_AUDIO_PROCESSING_OPTIONS,
@@ -183,6 +199,7 @@ export function CompressionApp({
         : initialPreset === "small"
           ? "small"
           : "balanced",
+    ...initialSettings?.audioOptions,
   });
   const [losslessImageOptions, setLosslessImageOptions] = useState<LosslessImageOptions>(
     DEFAULT_LOSSLESS_IMAGE_OPTIONS,
@@ -194,7 +211,12 @@ export function CompressionApp({
   );
   const [targetSizeOptions, setTargetSizeOptions] = useState<TargetSizeOptions>({
     ...DEFAULT_TARGET_SIZE_OPTIONS,
-    enabled: initialMode === "target-size",
+    ...initialSettings?.targetSizeOptions,
+    minimumQuality: {
+      ...DEFAULT_TARGET_SIZE_OPTIONS.minimumQuality,
+      ...initialSettings?.targetSizeOptions.minimumQuality,
+    },
+    enabled: initialSettings?.targetSizeOptions.enabled ?? initialMode === "target-size",
   });
   const [sampleTargetEstimate, setSampleTargetEstimate] =
     useState<TargetSizeEstimate | null>(null);
@@ -210,6 +232,8 @@ export function CompressionApp({
   const inputRef = useRef<HTMLInputElement>(null);
   const importedInitialFiles = useRef(false);
   const processStartLock = useRef(false);
+  const autoStartTriggered = useRef(false);
+  const startButtonRef = useRef<HTMLButtonElement>(null);
   const sampleEstimateController = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -583,6 +607,7 @@ export function CompressionApp({
               outputFormat: itemOutputFormat,
               encoding,
               quality,
+              imageMaxDimension,
               jpegBackgroundColor,
               enhancements: imageEnhancements,
               ai: imageAi,
@@ -657,7 +682,6 @@ export function CompressionApp({
       processStartLock.current = false;
     }
   };
-
   const applyRecommendation = (recommendationId: string) => {
     if (recommendationId === "image-alpha-lossless") {
       setOutputFormat(capabilities?.outputs.image.includes("webp") ? "webp" : "png");
@@ -829,6 +853,11 @@ export function CompressionApp({
               targetSizeInvalid
             ? "選択した出力設定の組み合わせを確認してください。"
             : null;
+  useEffect(() => {
+    if (!autoStart || autoStartTriggered.current || startDisabledReason) return;
+    autoStartTriggered.current = true;
+    startButtonRef.current?.click();
+  }, [autoStart, startDisabledReason]);
   const qualityEnhancementMode =
     processingMode === "improve-quality" ||
     processingMode === "improve-and-reduce" ||
@@ -1665,7 +1694,10 @@ export function CompressionApp({
               </div>
             )}
             {(hasImages || hasVideos || hasAudio) && (
-              <details className="group rounded-2xl border border-slate-200 bg-white">
+              <details
+                open={openDetails || undefined}
+                className="group rounded-2xl border border-slate-200 bg-white"
+              >
                 <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 text-sm font-black text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#5865e8] sm:px-5 [&::-webkit-details-marker]:hidden">
                   <span>
                     詳細設定
@@ -1908,6 +1940,34 @@ export function CompressionApp({
                               </div>
                             </div>
                           )}
+
+                          <label className="mt-5 block">
+                            <span className="mb-2 block text-xs font-black text-slate-700">
+                              画像の解像度
+                            </span>
+                            <select
+                              value={imageMaxDimension ?? "original"}
+                              disabled={isProcessing}
+                              onChange={(event) =>
+                                setImageMaxDimension(
+                                  event.target.value === "original"
+                                    ? null
+                                    : Number(event.target.value),
+                                )
+                              }
+                              className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-xs font-black text-slate-800"
+                            >
+                              <option value="original">元のサイズを維持</option>
+                              <option value="3840">長辺 3840px</option>
+                              <option value="2560">長辺 2560px</option>
+                              <option value="2048">長辺 2048px</option>
+                              <option value="1920">長辺 1920px</option>
+                              <option value="1280">長辺 1280px</option>
+                            </select>
+                            <span className="mt-1 block text-[10px] font-bold text-slate-400">
+                              元画像より大きくすることはありません。
+                            </span>
+                          </label>
                         </div>
 
                         <div className="space-y-3">
@@ -2079,6 +2139,7 @@ export function CompressionApp({
                 </div>
               </div>
               <button
+                ref={startButtonRef}
                 type="button"
                 onClick={() => void processAll()}
                 disabled={

@@ -45,6 +45,7 @@ interface ImageProcessOptions {
   outputFormat: ImageOutputFormat;
   encoding: ImageEncoding;
   quality: number;
+  maxDimension?: number | null;
   jpegBackgroundColor?: string;
   processingMode?: ProcessingMode;
   enhancements?: ImageEnhancementOptions;
@@ -318,6 +319,7 @@ async function encodeImage(
       outputFormat: options.outputFormat,
       encoding: options.encoding,
       quality: options.quality,
+      maxDimension: options.maxDimension,
       jpegBackgroundColor: options.jpegBackgroundColor,
       enhancements: options.ai?.enabled ? undefined : options.enhancements,
       warnings,

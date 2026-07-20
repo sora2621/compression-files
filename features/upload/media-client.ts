@@ -371,6 +371,7 @@ export interface ProcessImageInput {
   outputFormat: ImageOutputFormat;
   encoding: ImageEncoding;
   quality: number;
+  imageMaxDimension?: number | null;
   jpegBackgroundColor: string;
   enhancements: ImageEnhancementOptions;
   ai: ImageAiOptions;
@@ -395,6 +396,9 @@ export async function processImage(
   body.append("outputFormat", input.outputFormat);
   body.append("encoding", input.encoding);
   body.append("quality", String(input.quality));
+  if (input.imageMaxDimension !== null && input.imageMaxDimension !== undefined) {
+    body.append("imageMaxDimension", String(input.imageMaxDimension));
+  }
   body.append("jpegBackgroundColor", input.jpegBackgroundColor);
   body.append("enhancements", JSON.stringify(input.enhancements));
   body.append("ai", JSON.stringify(input.ai));
